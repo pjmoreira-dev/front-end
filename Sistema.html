@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Alunos - Faculdade</title>
+    
+
+</head>
+
+<link href="Estilo.css" rel="stylesheet">
+
+<body>
+    <div class="form-container">
+        <h2>Adicionar Novo Aluno</h2>
+        <div class="error-message" id="error-message"></div>
+        <form id="studentForm">
+            <label for="name">Nome:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="course">Curso:</label>
+            <input type="text" id="course" name="course" required>
+
+            <label for="enrollment">Matrícula:</label>
+            <input type="text" id="enrollment" name="enrollment" required>
+
+            <button type="submit">Adicionar Aluno</button>
+            <button type="button" class="clear-button" id="clearButton">Limpar Todos os Alunos</button>
+        </form>
+    </div>
+
+    <div class="students-container">
+        <h2>Lista de Alunos</h2>
+        <table id="studentsTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Curso</th>
+                    <th>Matrícula</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Alunos serão adicionados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.querySelector('#studentsTable tbody');
+            const errorMessage = document.getElementById('error-message');
+            const clearButton = document.getElementById('clearButton');
+
+            function loadStudents() {
+                const students = JSON.parse(localStorage.getItem('students')) || [];
+                tableBody.innerHTML = '';
+                students.forEach(student => {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${student.name}</td>
+                        <td>${student.email}</td>
+                        <td>${student.course}</td>
+                        <td>${student.enrollment}</td>
+                    `;
+                    tableBody.appendChild(newRow);
+                });
+            }
+
+            function validateUnique(name, enrollment) {
+                const students = JSON.parse(localStorage.getItem('students')) || [];
+                const nameExists = students.some(student => student.name.toLowerCase() === name.toLowerCase());
+                const enrollmentExists = students.some(student => student.enrollment === enrollment);
+
+                return !nameExists && !enrollmentExists;
+            }
+
+            document.getElementById('studentForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const course = document.getElementById('course').value.trim();
+                const enrollment = document.getElementById('enrollment').value.trim();
+
+                if (!validateUnique(name, enrollment)) {
+                    errorMessage.textContent = 'Nome ou matrícula já existente. Por favor, insira valores únicos.';
+                    return;
+                }
+
+                const newStudent = { name, email, course, enrollment };
+                const students = JSON.parse(localStorage.getItem('students')) || [];
+                students.push(newStudent);
+                localStorage.setItem('students', JSON.stringify(students));
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${email}</td>
+                    <td>${course}</td>
+                    <td>${enrollment}</td>
+                `;
+
+                tableBody.appendChild(newRow);
+
+                document.getElementById('studentForm').reset();
+                errorMessage.textContent = '';
+            });
+
+            clearButton.addEventListener('click', () => {
+                if (confirm('Você tem certeza de que deseja apagar todos os alunos?')) {
+                    localStorage.removeItem('students');
+                    tableBody.innerHTML = '';
+                }
+            });
+
+            loadStudents();
+        });
+    </script>
+</body>
+</html>
